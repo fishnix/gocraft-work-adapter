@@ -119,3 +119,59 @@ func (q Adapter) PerformIn(job worker.Job, t time.Duration) error {
 func (q Adapter) PerformAt(job worker.Job, t time.Time) error {
 	return q.PerformIn(job, t.Sub(time.Now()))
 }
+
+// PerformUnique sends a new job to the queue now, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUnique(job worker.Job) error {
+	q.Logger.Infof("Enqueuing job %s\n", job)
+	_, err := q.Enqueur.EnqueueUnique(job.Handler, job.Args)
+	if err != nil {
+		q.Logger.Errorf("error enqueuing job %s", job)
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// PerformUniqueIn sends a new job to the queue with a delay, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUniqueIn(job worker.Job, t time.Duration) error {
+	q.Logger.Infof("Enqueuing job %s\n", job)
+	d := int64(t / time.Second)
+	_, err := q.Enqueur.EnqueueUniqueIn(job.Handler, d, job.Args)
+	if err != nil {
+		q.Logger.Errorf("error enqueuing job %s", job)
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// PerformUniqueAt sends a new job to the queue, with a given start time, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUniqueAt(job worker.Job, t time.Time) error {
+	return q.PerformUniqueIn(job, t.Sub(time.Now()))
+}
+
+// PerformUniqueByKey sends a new job to the queue now, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUniqueByKey(job worker.Job, key map[string]interface{}) error {
+	q.Logger.Infof("Enqueuing job %s\n", job)
+	_, err := q.Enqueur.EnqueueUniqueByKey(job.Handler, job.Args, key)
+	if err != nil {
+		q.Logger.Errorf("error enqueuing job %s", job)
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// PerformUniqueByKeyIn sends a new job to the queue with a delay, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUniqueByKeyIn(job worker.Job, t time.Duration, key map[string]interface{}) error {
+	q.Logger.Infof("Enqueuing job %s\n", job)
+	d := int64(t / time.Second)
+	_, err := q.Enqueur.EnqueueUniqueInByKey(job.Handler, d, job.Args, key)
+	if err != nil {
+		q.Logger.Errorf("error enqueuing job %s", job)
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// PerformUniqueByKeyAt sends a new job to the queue, with a given start time, doesn't queue the job if it is not unique.
+func (q Adapter) PerformUniqueByKeyAt(job worker.Job, t time.Time, key map[string]interface{}) error {
+	return q.PerformUniqueByKeyIn(job, t.Sub(time.Now()), key)
+}
